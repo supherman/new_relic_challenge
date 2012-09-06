@@ -4,7 +4,7 @@ instance_method = signature.match(/#(.+$)/)[1] if signature.match(/#(.+$)/)
 class_method = signature.match(/\.(.+$)/)[1] if signature.match(/\.(.+$)/)
 constant = signature.match(/(.+)(\.|#).+$/)[1]
 
-ENV['count'] = '0'
+$count = []
 
 eval "class #{constant}; end"
 
@@ -15,7 +15,7 @@ if instance_method
   override = <<RB
     alias_method :old, :#{instance_method}
     def #{instance_method}(*args)
-      ENV['count'] = (ENV['count'].to_i + 1).to_s
+      $count << 1
       old(*args)
     end
 RB
@@ -28,7 +28,7 @@ else
     class << self
       alias_method :old, :#{class_method}
       def #{class_method}(*args)
-        ENV['count'] = (ENV['count'].to_i + 1).to_s
+        $count << 1
         old(*args)
       end
     end
@@ -38,5 +38,5 @@ end
 constant.class_eval override
 
 at_exit do
-  puts "#{signature} called #{ENV['count']} times"
+  puts "#{signature} called #{$count.size} times"
 end
